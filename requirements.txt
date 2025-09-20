@@ -1,0 +1,13 @@
+streamlit
+fpdf
+pypdf
+faiss-cpu
+langchain
+langchain_community
+langchain-google-genai
+langchain_experimental
+sentence-transformers==2.2.2
+google-generativeai
+python-dotenv
+flask
+-e .
