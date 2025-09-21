@@ -5,8 +5,10 @@ faiss-cpu
 langchain
 langchain_community
 langchain-google-genai
+langchain-huggingface
+hf_xet
 langchain_experimental
-sentence-transformers==2.2.2
+sentence-transformers
 google-generativeai
 python-dotenv
 flask
