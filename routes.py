@@ -1,65 +1,29 @@
-from flask import Flask, render_template, jsonify, request
-from msme_bot.indexing.vector_store_manager import HGF_embedder
-from langchain_astradb import AstraDBVectorStore
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import ChatPromptTemplate
-from dotenv import load_dotenv
-from msme_bot.generation.prompt_templates import *
-import os
+# routes.py
+from fastapi import APIRouter, UploadFile, File, Request
+#import chunker
+#import extractor # still need this for the extraction function call
+
+router = APIRouter()
+
+@router.post("/process-pdf")
+async def process_pdf(request: Request, file: UploadFile = File(...)):
+    # 1. Access the 'Warm' converter from main.py
+    converter = request.app.state.converter
+    
+    # 2. Use your modular pipeline
+    # doc_obj, assets = extractor.extract_to_doc_and_assets(temp_path, converter)
+    # ... rest of your logic ...
+    
+    return {"status": "success", "filename": file.filename}
 
 
 
-app = Flask(__name__)
-
-load_dotenv()
-
-ASTRA_DB_API_KEY = ""
-GOOGLE_API_KEY = ""
-
-os.environ["ASTRA_DB_API_KEY"] = ASTRA_DB_API_KEY
-os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
-
-
-embeddings = HGF_embedder()
-
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.0)
-prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", system_prompt),
-        ("human", "{input}")
-    ]
-)
-
-
-vstore = AstraDBVectorStore(
-            collection_name= "DocStore",
-            api_endpoint= ASTRA_DB_API_KEY,
-            token="",
-            embedding=HGF_embedder()
-        ) 
-
-db_retriever = vstore.as_retriever(
-    search_type="similarity_score_threshold",
-    search_kwargs={"k": 3, "score_threshold": 0.1},
-)
-
-
-question_answer_chain = create_stuff_documents_chain(llm, prompt)
-rag_chain = create_retrieval_chain(db_retriever, question_answer_chain)
-
-response = rag_chain.invoke({"input" : "What is Acticle 73 about in constitution of India?"})
-print(response["answer"])
-
-
-
-@app.route("/")
+@router.get("/")
 def home():
     return render_template("chat.html")
 
 
-@app.route("/get", methods=["GET", "POST"])
+@router.get("/msg")
 def chat():
     msg= request.form["msg"]
     input= msg

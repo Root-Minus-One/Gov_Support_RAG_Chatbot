@@ -211,3 +211,4 @@ __marimo__/
 #misc
 node_modules/
 dataset/
+output/
