@@ -1,12 +1,12 @@
 from flask import Flask, render_template, jsonify, request
-from src.embeddings.embedder import HGF_embedder
+from msme_bot.indexing.vector_store_manager import HGF_embedder
 from langchain_astradb import AstraDBVectorStore
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
-from src.generation.prompts import *
+from msme_bot.generation.prompt_templates import *
 import os
 
 
