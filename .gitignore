@@ -212,3 +212,4 @@ __marimo__/
 node_modules/
 dataset/
 output/
+template.py

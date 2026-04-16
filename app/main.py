@@ -1,7 +1,7 @@
 # main.py
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from routes import router
+from app.api.routes import router
 #import extractor
 
 ### Main.py is the app and the routes are in routes.py and when api call happens it goes to routes.py from 
