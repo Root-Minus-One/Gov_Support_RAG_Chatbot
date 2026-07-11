@@ -1,10 +1,19 @@
 streamlit
-pypdf
+
 PyMuPDF
 docling
 
+
+fastapi
+python-multipart
+uvicorn
+
+pydantic
+pydantic-settings
+
 pinecone
 weaviate
+asyncpg
 
 langchain>=0.3.23,<0.4
 langchain-core>=0.3.52,<0.4
@@ -16,11 +25,9 @@ langchain_experimental
 langsmith
 
 sentence-transformers
-hf_xet
 
 google-generativeai
-
 python-dotenv
 
-flask
+loguru
 -e .

@@ -1,105 +1,65 @@
 #import fitz PyMuPDF
-from langchain.document_loaders import PyPDFLoader, PyPDFDirectoryLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
+from docling.chunking import HybridChunker
 
 from docling.datamodel.pipeline_options import PdfPipelineOptions
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.base_models import InputFormat
+from docling_core.types.doc.document import PictureItem
+from docling_core.types.doc.base import ImageRefMode
+
 
 from typing import List, Dict, Any
 import numpy as np
+import pandas as pd
 from PIL import Image
 import os
-
-
-
-def load_pdf_file(file_path): 
-    """Extracts text from .pdf files"""
-    try:
-        pdf_contents = PyPDFLoader(file_path)
-        
-        return pdf_contents
-    except:
-         pass
-
-
-def load_documents_from_directory(directory_path) -> List[Document]: 
-    """ Iterates through a directory, loads pdf files and returns a list of Document objects"""
-    
-    try:
-        if not os.path.isdir(directory_path):
-            print(f"Error: The directory '{directory_path}' does not exist.")
-            return []
-        
-        directory_contents : List[Document] = []
-        
-        pdf_loader = PyPDFDirectoryLoader(directory_path)
-        
-        directory_contents = pdf_loader.load()
-        
-        return directory_contents
-    except:
-        pass
+from pathlib import Path
 
 
 
 def get_docling_converter():
-    options = PdfPipelineOptions()
-    options.do_table_structure = True
-    options.generate_picture_images = True
-    options.do_ocr = True
+    pipeline_options = PdfPipelineOptions()
+    pipeline_options.do_table_structure = True
+    pipeline_options.generate_picture_images = True
+    pipeline_options.do_ocr = True
     return DocumentConverter(
-        format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=options)}
+        format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)}
     )
 
 def extract_assets(pdf_path, converter):
     # Returns the 'Smart Object' (doc) and the 'Physical' Assets for S3
     result = converter.convert(pdf_path)
-    doc = result.document
     
-    physical_assets = {
-        "tables": [],
-        "images": []
-    }
+    doc = result.document.export_to_text()
+    markdown = result.document.export_to_markdown()
 
-    # Prepare raw table data for S3/CSV storage
-    for table in doc.tables:
-        physical_assets["tables"].append({
-            "df": table.export_to_dataframe(),
-            "page": table.prov[0].page_no if table.prov else None
-        })
-
-    # Prepare raw image files for S3 storage
-    for i, img in enumerate(doc.pictures):
-        if img.image:
-            physical_assets["images"].append({
-                "pil": img.image.pil_image,
-                "name": f"image_{i}.png",
-                "page": img.prov[0].page_no if img.prov else None
-            })
-            
-    return doc, physical_assets
+    picture_counter = 0
+    for element, _level in result.document.iterate_items():
+        if isinstance(element, PictureItem):
+            picture_counter += 1
+            with open(f"picture-{picture_counter}.png", "wb") as fp:
+                element.get_image(result.document).save(fp, "PNG")
 
 
+    for table_ix, table in enumerate(result.document.tables):
+        # Export to DataFrame
+        df = table.export_to_dataframe(doc=result.document)
+        df.to_csv(f"table-{table_ix}.csv")
+
+        # Or access cell-level data
+        for row in table.data.grid:
+            for cell in row:
+                print(cell.text)
+
+    # Or save markdown with embedded images
+    result.document.save_as_markdown("output.md", image_mode=ImageRefMode.EMBEDDED)
+    return doc
 
 
-### Cleaning and Preprocessing
 
-def remove_redundant_text():
-    """removes unneccesary text"""
-    try:
-        pass
-    except:
-        pass
-
-    
-
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
-from typing import List
-from docling.chunking import HierarchicalChunker
-
-
+### Chunking
 
 def get_hierarchical_chunks(doc, file_id):
     chunker = HierarchicalChunker()
@@ -109,8 +69,9 @@ def get_hierarchical_chunks(doc, file_id):
     for chunk in chunk_iter:
         # serialize(chunk) includes text and Markdown tables together!
         db_chunks.append({
-            "content": chunker.serialize(chunk), 
+            "content": chunker.contextualize(chunk), 
             "metadata": {
+                "category": None
                 "file_id": file_id,
                 "headings": chunk.meta.headings,
                 "pages": [p.page_no for p in chunk.meta.doc_items.prov] if chunk.meta.doc_items else []
@@ -132,14 +93,11 @@ def doc_text_splitter(doc_list: List[Document], chunk_size: int, chunk_overlap: 
         pass
     
 
-def other_text_chunking(doc_list: List[Document]):
-    """other chunking method"""
-    try:
-        pass
-    except:
-        pass
-
-
 
 #def metadata_tagging
 
+
+
+if __name__ == "__main__":
+    doc, assets = extract_assets(r"C:\Users\Ruthvik\Gov_Support_RAG_Chatbot\dataset\Policies\2024INFRA_MS21.pdf", get_docling_converter())
+    print(doc)

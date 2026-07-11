@@ -1,6 +1,8 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
+*.pyc
+*.pyo
 *$py.class
 
 # C extensions
@@ -209,7 +211,21 @@ marimo/_lsp/
 __marimo__/
 
 #misc
-node_modules/
 dataset/
 output/
 template.py
+logs/
+
+
+#node
+node_modules/
+package.json
+pckage-lock.json
+
+#OS
+.DS_Store
+Thumbs.db
+
+#Docling Cache
+.docling_cache/
+.cache/

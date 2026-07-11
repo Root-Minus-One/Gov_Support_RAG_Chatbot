@@ -1,0 +1,19 @@
+[project]
+name = "gov-support-rag-chatbot"
+version = "0.1.0"
+description = "RAG application for government documents"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "asyncpg>=0.31.0",
+    "docling>=2.102.1",
+    "fastapi>=0.139.0",
+    "langchain>=1.3.9",
+    "langchain-text-splitters>=1.1.2",
+    "loguru>=0.7.3",
+    "python-multipart>=0.0.32",
+    "uvicorn>=0.51.0",
+]
+
+[tool.uv]
+package = false
