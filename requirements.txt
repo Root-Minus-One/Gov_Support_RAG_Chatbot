@@ -13,7 +13,9 @@ pydantic-settings
 
 pinecone
 weaviate
+
 asyncpg
+pymongo
 
 langchain>=0.3.23,<0.4
 langchain-core>=0.3.52,<0.4

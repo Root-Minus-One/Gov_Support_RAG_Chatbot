@@ -1,13 +1,10 @@
 import asyncpg
 import asyncio
 from app.core.config import settings
-from fastapi import FastAPI, requests
-
-DATABASE_URL = settings.DATABASE_URL.get_secret_value()
 
 
 async def main():
-    connection = await asyncpg.connect(dsn=DATABASE_URL)
+    connection = await asyncpg.connect(dsn=settings.DATABASE_URL.get_secret_value())
     
     try:
         result = await connection.fetchval("SELECT NOW()")

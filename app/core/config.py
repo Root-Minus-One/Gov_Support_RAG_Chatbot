@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     ENVIRONMENT: Literal["development", "staging", "production"] = "development"
     LLM_API_KEY: SecretStr
     LOG_LEVEL: Literal["debug", "info", "warning", "error"] = "debug"
+    MONGO_DB_URI: SecretStr
+    MONGO_DB_NAME: str
     PINECONE_API_KEY: SecretStr
     PINECONE_INDEX_NAME: str
     RATE_LIMIT_PER_MINUTE: int = 5
