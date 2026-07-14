@@ -1,6 +1,6 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
-from utils.config import load_config
-from utils.config import get_api_key
+from app.core.config import load_config
+from app.core.config import get_api_key
 from typing import List, Dict
 
 config = load_config()

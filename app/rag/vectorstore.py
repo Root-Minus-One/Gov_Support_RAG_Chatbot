@@ -1,6 +1,5 @@
 #from langchain_astradb import AstraDBVectorStore
-from utils.config import get_api_key
-from embeddings_manager import EmbeddingModel
+from app.rag.embeddings import EmbeddingModel
 from pinecone import Pinecone, ServerlessSpec
 from typing import List
 import dotenv

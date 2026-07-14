@@ -1,5 +1,5 @@
-from utils.config import load_config
-from utils.config import get_api_key 
+from app.core.config import load_config
+from app.core.config import get_api_key 
 
 #from langchain_huggingface import HuggingFaceEmbeddings 
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
