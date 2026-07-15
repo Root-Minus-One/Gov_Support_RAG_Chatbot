@@ -8,12 +8,15 @@ class Settings(BaseSettings):
     APP_NAME: str = "gov-support-rag-chatbot"
     APP_VERSION: str = "0.0.1"
     DATABASE_URL: SecretStr
+    DATA_ROOT_DIR: str
     EMBEDDING_MODEL_NAME: str
     ENVIRONMENT: Literal["development", "staging", "production"] = "development"
     LLM_API_KEY: SecretStr
     LOG_LEVEL: Literal["debug", "info", "warning", "error"] = "debug"
     MONGO_DB_URI: SecretStr
     MONGO_DB_NAME: str
+    IMAGES_COLLECTION_NAME: str
+    TABLES_COLLECTION_NAME: str
     PINECONE_API_KEY: SecretStr
     PINECONE_INDEX_NAME: str
     RATE_LIMIT_PER_MINUTE: int = 5

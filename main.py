@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from loguru import logger
 
-
+from app.api.routes import router
 from app.core.logger import setup_logging
 from app.db.postgres import init_pool, close_pool
 from app.db.mongo import init_mongo, close_mongo, get_db
@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
         await close_mongo()
     
 app = FastAPI(lifespan=lifespan)
-
+app.include_router(router)
 
 @app.get("/health")
 async def health():
