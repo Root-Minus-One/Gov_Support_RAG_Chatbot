@@ -7,7 +7,7 @@ from app.core.config import settings
 from app.rag.ingest import ingest_folder
 from app.db.postgres import get_pool
 from app.core.config import settings
-
+from app.rag.embeddings import run_embedding_pipeline
 #import extractor # still need this for the extraction function call
 
 
@@ -38,8 +38,10 @@ async def ingest_status(limit: int = 20):
 
 
 
-
-
+@router.post("/embed")
+async def run_embeddings(background_tasks: BackgroundTasks):
+    background_tasks.add_task(run_embedding_pipeline)
+    return {"message": "Embedding pipeline started"}
 
 
 # @router.get("/msg")

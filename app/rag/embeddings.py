@@ -1,42 +1,67 @@
-from app.core.config import load_config
-from app.core.config import get_api_key 
+from sentence_transformers import SentenceTransformer
+from pinecone import Pinecone
+from loguru import logger
 
-#from langchain_huggingface import HuggingFaceEmbeddings 
-from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+from typing import List
+import asyncio
+import functools
 
-from typing import List, Any
-from pydantic import SecretStr
+from app.core.config import settings
+from app.db.postgres import get_pool
+
+
+_embedding_model = SentenceTransformer(settings.EMBEDDING_MODEL_NAME)
 
 
 
-class EmbeddingModel:
-    """Manages the loading and usage of the embedding model."""
+async def embed_texts(texts: list[str]) -> list[list[float]]:
+    loop = asyncio.get_running_loop()
+
+    encode_fn = functools.partial(_embedding_model.encode, batch_size=32)
+
+    embeddings = await loop.run_in_executor(None, encode_fn, texts)
+
+    return embeddings.tolist()
+
     
-    def __init__(self):
-        "Initializes the EmbeddingModel by loading the specified embedding model."
+try:
+    pc = Pinecone(api_key=settings.PINECONE_API_KEY.get_secret_value())
+    index = pc.Index(settings.PINECONE_INDEX_NAME)
+except Exception as e:
+    logger.error(f"Failed to initialise Vector Index: {e}")
+    raise
 
-        self.configuration = load_config()
-        self.model = self.configuration["embedding_model"]["model_name"]
-        self.embedding_client = self._get_embedding_instance()
-    
-    
-    def _get_embedding_instance(self):
-        return GoogleGenerativeAIEmbeddings(model= self.model, 
-                                            google_api_key= SecretStr(get_api_key("GOOGLE_API_KEY"))
-                                            )
-    
-    def embed_doc(self, text):
-        """Embeds a list of documents."""
-        embed_model = self._get_embedding_instance()
-        return embed_model.embed_documents(text)
-    
-    def embed_query(self, query):
-        """Embeds a query string"""
+async def run_embedding_pipeline():
+    try:
+        pool = get_pool()
+        async with pool.acquire() as conn:
 
-        embed_model = self._get_embedding_instance()
-        return embed_model.embed_query(query)
+            select_query = "SELECT * FROM chunks WHERE is_embedded = FALSE"
+            update_query = "UPDATE chunks SET is_embedded = TRUE WHERE chunk_id = $1"
 
-    # def HGF_embedder(model: str = "sentence-transformers/all-MiniLM-L6-v2"):
-    #     embedding_model = HuggingFaceEmbeddings(model_name= load_config)
+            results = await conn.fetch(select_query)
+            
+            texts = [row["chunk_text"] for row in results]
+            embeddings = await embed_texts(texts)
 
-    #     return embedding_model
+            logger.info(f"Embedding {len(results)} chunks")
+            
+            BATCH_SIZE = 100
+            for i in range(0, len(results), BATCH_SIZE):
+                batch_rows = results[i:i+BATCH_SIZE]
+                batch_embeddings = embeddings[i:i+BATCH_SIZE]
+                vectors = [
+                    (str(row["chunk_id"]), emb, {"chunk_text": row["chunk_text"], "doc_id": str(row["doc_id"])})
+                    for row, emb in zip(batch_rows, batch_embeddings)
+                ]
+                index.upsert(vectors=vectors)
+                # update is_embedded for this batch
+
+                chunk_ids = [row["chunk_id"] for row in batch_rows]
+                await conn.executemany(update_query, [(cid,) for cid in chunk_ids])
+
+            logger.info(f"Embedding pipeline complete - {len(results)} chunks embedded")
+                
+    except Exception as e:
+        logger.error(f"Failed ro embed: {e}")
+        raise

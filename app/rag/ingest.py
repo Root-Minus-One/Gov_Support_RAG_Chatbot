@@ -1,13 +1,11 @@
-from langchain_core.documents import Document
-
 from docling_core.transforms.chunker.hybrid_chunker import HybridChunker
-from docling.datamodel.pipeline_options import PdfPipelineOptions, PdfBackend
+from docling.datamodel.pipeline_options import PdfPipelineOptions
 from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.base_models import InputFormat
 from docling_core.types.doc.document import PictureItem
 from docling_core.types.doc.base import ImageRefMode
-from transformers import AutoTokenizer
+
 
 from io import BytesIO
 from PIL import Image
@@ -276,11 +274,6 @@ async def log_ingestion_result(file_name, chunks_saved, status, error_message, d
                     "VALUES ($1, $2, $3, $4, $5)"
 
         await conn.execute(insert_query, file_name, chunks_saved, status, error_message, duration)
-
-  
-
-
-
 
 
 if __name__ == "__main__":
