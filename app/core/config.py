@@ -5,6 +5,7 @@ from typing import Literal
 
 
 class Settings(BaseSettings):
+    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
     APP_NAME: str = "gov-support-rag-chatbot"
     APP_VERSION: str = "0.0.1"
     DATABASE_URL: SecretStr

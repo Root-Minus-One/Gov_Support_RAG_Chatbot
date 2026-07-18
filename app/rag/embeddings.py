@@ -58,6 +58,7 @@ async def run_embedding_pipeline():
                     (str(row["chunk_id"]), emb, {
                         "chunk_text": row["chunk_text"],
                         "doc_id": str(row["doc_id"]),
+                        "document_title": row["document_title"],
                         "category": row["category"]})
                     for row, emb in zip(batch_rows, batch_embeddings)
                 ]

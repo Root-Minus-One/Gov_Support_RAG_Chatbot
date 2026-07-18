@@ -5,6 +5,7 @@ docling
 
 
 fastapi
+slowapi
 python-multipart
 uvicorn
 

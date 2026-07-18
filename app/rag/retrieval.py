@@ -27,6 +27,7 @@ async def retrieve_chunks(question: str, top_k: int = 3, category: str | None = 
             continue
         results.append({"chunk_text": match["metadata"].get("chunk_text", ""),
                         "doc_id": match["metadata"].get("doc_id", ""),
+                        "document_title": match["metadata"].get["document_title", ""],
                         "score": match["score"],
                         "category": match["metadata"].get("category", "unknown")})
 

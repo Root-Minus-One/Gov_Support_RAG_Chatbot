@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.rag.embeddings import run_embedding_pipeline
 from app.rag.generation import generate_answer
 from app.rag.retrieval import retrieve_chunks
+from app.middleware.rate_limiter import limiter
 
 #import extractor # still need this for the extraction function call
 
@@ -54,6 +55,7 @@ class ChatRequest(BaseModel):
     category : str | None = None
 
 @router.post("/chat")
+@limiter.limit("5/minute")
 async def chat(request: ChatRequest):
     chunks = await retrieve_chunks(question=request.question, category=request.category)
 
