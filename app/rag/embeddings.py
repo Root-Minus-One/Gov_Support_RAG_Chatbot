@@ -36,7 +36,11 @@ async def run_embedding_pipeline():
         pool = get_pool()
         async with pool.acquire() as conn:
 
-            select_query = "SELECT * FROM chunks WHERE is_embedded = FALSE"
+            select_query = "SELECT c.chunk_id, c.chunk_text, c.doc_id, d.category " \
+            "FROM chunks c " \
+            "JOIN documents d ON c.doc_id = d.doc_id " \
+            "WHERE c.is_embedded = FALSE"
+            
             update_query = "UPDATE chunks SET is_embedded = TRUE WHERE chunk_id = $1"
 
             results = await conn.fetch(select_query)
@@ -51,7 +55,10 @@ async def run_embedding_pipeline():
                 batch_rows = results[i:i+BATCH_SIZE]
                 batch_embeddings = embeddings[i:i+BATCH_SIZE]
                 vectors = [
-                    (str(row["chunk_id"]), emb, {"chunk_text": row["chunk_text"], "doc_id": str(row["doc_id"])})
+                    (str(row["chunk_id"]), emb, {
+                        "chunk_text": row["chunk_text"],
+                        "doc_id": str(row["doc_id"]),
+                        "category": row["category"]})
                     for row, emb in zip(batch_rows, batch_embeddings)
                 ]
                 index.upsert(vectors=vectors)

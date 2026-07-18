@@ -28,7 +28,9 @@ langsmith
 
 sentence-transformers
 
-google-generativeai
+google-genai
+groq
+
 python-dotenv
 
 loguru

@@ -1,30 +1,15 @@
-from langchain.prompts import PromptTemplate
-
-
-system_prompt = (
-     """ You are an assistant for question-answering tasks.
-     "Use the following places of retrieved content to answer the question.
-     if you don't know the answer, say that you are not aware of that.
-     Use three sentence maximum and keep the answer concise."""
-     "\n\n"
-     "{context}"
-)
-
-
-def create_prompt():
-    """
-    Create a custom RAG prompt template.
-    """
-    template = """
-    You are a helpful AI assistant.
-    Use the provided context to answer the question as accurately as possible.
+def get_prompt_template(question: str, chunks: list[dict]) -> str:
+    context = "\n\n".join([chunk["chunk_text"] for chunk in chunks])
     
-    Context:
-    {context}
-    
-    Question:
-    {question}
-    
-    Answer:
-    """
-    return PromptTemplate(template=template, input_variables=["context", "question"])
+    return f"""You are a helpful assistant for AP government MSME schemes.
+Use ONLY the provided context to answer the question.
+If the answer is not in the context, say "I don't have information on this."
+Keep your answer concise and accurate.
+
+Context:
+{context}
+
+Question:
+{question}
+
+Answer:"""

@@ -1,4 +1,5 @@
 # routes.py
+from pydantic import BaseModel
 from fastapi import APIRouter, BackgroundTasks
 from typing import Optional
 from pathlib import Path
@@ -8,6 +9,9 @@ from app.rag.ingest import ingest_folder
 from app.db.postgres import get_pool
 from app.core.config import settings
 from app.rag.embeddings import run_embedding_pipeline
+from app.rag.generation import generate_answer
+from app.rag.retrieval import retrieve_chunks
+
 #import extractor # still need this for the extraction function call
 
 
@@ -42,6 +46,25 @@ async def ingest_status(limit: int = 20):
 async def run_embeddings(background_tasks: BackgroundTasks):
     background_tasks.add_task(run_embedding_pipeline)
     return {"message": "Embedding pipeline started"}
+
+
+
+class ChatRequest(BaseModel):
+    question : str
+    category : str | None = None
+
+@router.post("/chat")
+async def chat(request: ChatRequest):
+    chunks = await retrieve_chunks(question=request.question, category=request.category)
+
+    if not chunks:
+        return {"question": request.question, "answer": "I don't have information on this topic.", "sources": []}
+
+    answer = generate_answer(request.question, chunks)
+    
+    sources = [{"doc_id": c["doc_id"], "category": c["category"], "score": c["score"]} for c in chunks]
+
+    return {"question": request.question, "answer": answer, "source": sources}
 
 
 # @router.get("/msg")

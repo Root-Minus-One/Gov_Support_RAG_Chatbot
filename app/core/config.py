@@ -11,7 +11,8 @@ class Settings(BaseSettings):
     DATA_ROOT_DIR: str
     EMBEDDING_MODEL_NAME: str
     ENVIRONMENT: Literal["development", "staging", "production"] = "development"
-    LLM_API_KEY: SecretStr
+    GROQ_API_KEY: SecretStr
+    LLM_MODEL_NAME: str
     LOG_LEVEL: Literal["debug", "info", "warning", "error"] = "debug"
     MONGO_DB_URI: SecretStr
     MONGO_DB_NAME: str
