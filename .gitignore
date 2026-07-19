@@ -220,7 +220,7 @@ logs/
 #node
 node_modules/
 package.json
-pckage-lock.json
+package-lock.json
 
 #OS
 .DS_Store
