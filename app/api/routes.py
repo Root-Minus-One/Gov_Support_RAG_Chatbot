@@ -1,16 +1,20 @@
 # routes.py
 from pydantic import BaseModel
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import Request, APIRouter, BackgroundTasks
 from typing import Optional
 from pathlib import Path
 
-from app.core.config import settings
-from app.rag.ingest import ingest_folder
 from app.db.postgres import get_pool
+
 from app.core.config import settings
+from app.core.config import settings
+
+from app.rag.ingest import ingest_folder
 from app.rag.embeddings import run_embedding_pipeline
 from app.rag.generation import generate_answer
 from app.rag.retrieval import retrieve_chunks
+from app.rag.gaurdrails import validate_input, check_relevance
+
 from app.middleware.rate_limiter import limiter
 
 #import extractor # still need this for the extraction function call
@@ -56,27 +60,24 @@ class ChatRequest(BaseModel):
 
 @router.post("/chat")
 @limiter.limit("5/minute")
-async def chat(request: ChatRequest):
-    chunks = await retrieve_chunks(question=request.question, category=request.category)
+async def chat(request: Request, body: ChatRequest):
+    
+    is_valid, message = validate_input(body.question)
+    if not is_valid:
+        return {"error": message}
 
-    if not chunks:
-        return {"question": request.question, "answer": "I don't have information on this topic.", "sources": []}
+    chunks = await retrieve_chunks(question=body.question, category=body.category)
 
-    answer = generate_answer(request.question, chunks)
+    is_relevant, message = check_relevance(chunks)
+    if not is_relevant:
+        return {"answer": "I don't have information on this topic.", "detail": message}
+
+    answer = generate_answer(body.question, chunks)
     
     sources = [{"doc_id": c["doc_id"], "category": c["category"], "score": c["score"]} for c in chunks]
 
-    return {"question": request.question, "answer": answer, "source": sources}
+    return {"question": body.question, "answer": answer, "source": sources}
 
-
-# @router.get("/msg")
-# def chat():
-#     msg= request.form["msg"]
-#     input= msg
-#     print(input)
-#     response = rag_chain.invoke({"input" : msg})
-#     print("Response : ", response["answer"])
-#     return str(response["answer"])
 
 
 

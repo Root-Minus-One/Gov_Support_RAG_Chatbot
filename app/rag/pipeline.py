@@ -1,27 +1,31 @@
-#import extractor
-#import chunker
+from langchain_community.retrievers import BM25Retriever
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_core.callbacks import CallbackManagerForRetrieverRun
+from langchain_core.documents import Document
+from langchain_core.retrievers import BaseRetriever
 
-def run_ingestion_pipeline(pdf_list):
-    # 1. Initialize the AI engine once (Production best practice)
-    converter = extractor.get_docling_converter()
+
+from app.core.config import settings
+from app.rag.embeddings import embed_texts
+
+
+# 1. Embeddings wrapper
+
+embeddings = HuggingFaceEmbeddings(model=settings.EMBEDDING_MODEL_NAME)
+
+# 2. Pinecone vector store
+class PineconeRetriever(BaseRetriever):
+    top_k: int = 5
+
+    def _get_relevant_documents(self, query: str) -> list[Document]:
+        ...
     
-    for i, pdf_path in enumerate(pdf_list):
-        file_id = f"PDF_BATCH_{i:03}"
-        
-        # 2. EXTRACTION: Get Smart Map and Physical Assets
-        doc_obj, physical_assets = extractor.extract_assets(pdf_path, converter)
-        
-        # 3. CHUNKING: Slices the Smart Map for the Database
-        searchable_chunks = chunker.get_smart_chunks(doc_obj, file_id)
-        
-        # 4. STORAGE STRATEGY
-        # Bucket A: Physical Assets -> UPLOAD TO S3
-        # (Save images/tables to cloud storage here)
-        
-        # Bucket B: Searchable Assets -> APPEND TO DATABASE
-        # (Save searchable_chunks into your SQL/Vector DB here)
-        
-        print(f"File {file_id} processed. Chunks: {len(searchable_chunks)}, Assets: {len(physical_assets['images'])}")
+     
 
-# Usage
-# run_production_pipeline([r"C:\Docs\report1.pdf", r"C:\Docs\report2.pdf"])
+)
+# 3. BM25 retriever
+# 4. Ensemble retriever
+# 5. Prompt template
+# 6. LLM
+# 7. Chain
+# 8. One function: async def rag_chain(question, category) -> dict
