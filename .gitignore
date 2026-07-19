@@ -229,3 +229,5 @@ Thumbs.db
 #Docling Cache
 .docling_cache/
 .cache/
+
+dataset/
