@@ -27,10 +27,4 @@ Seeking a multi-channel AI-powered chatbot solution that:
 - Increased trust and transparency in government services through timely updates and responsive support.
 - Data-driven insights to continuously refine services, aligning offerings with user needs.
 
-[text](https://drive.google.com/drive/folders/1edexdjnka99Fa56Y-1y2fanbtiBKlLxq?usp=drive_link)
-
-- Data Ingest
-- Text Parsing
-- Embedding
-- Indexing
-- Generation
+[dataset](https://drive.google.com/drive/folders/1edexdjnka99Fa56Y-1y2fanbtiBKlLxq?usp=drive_link)

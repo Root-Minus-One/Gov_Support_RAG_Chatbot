@@ -146,7 +146,7 @@ async def extract_save_images(doc_id, result):
 
 
 
-async def extract_save_tables(doc_id, result):
+async def extract_save_tables(doc_id, result, metadata):
     db = get_db()
     table_collection = settings.TABLES_COLLECTION_NAME
     collection = db[table_collection]
@@ -164,7 +164,11 @@ async def extract_save_tables(doc_id, result):
                 "doc_id": str(doc_id),
                 "table_index": table_ix,
                 "table_data": df.to_dict(orient="records"),
-                "page_number": page_number
+                "table_markdown": df.to_markdown(),
+                "page_number": page_number,
+                "is_embedded": False,
+                "category": metadata["category"],
+                "file_name": metadata["file_name"]
                 })
         logger.info(f"Saved {len(result.document.tables)} tables for doc_id {doc_id}")
 
@@ -226,7 +230,7 @@ async def ingest_file(file_path):
         results = await asyncio.gather(
             extract_save_text(doc_id, result),
             extract_save_images(doc_id, result),
-            extract_save_tables(doc_id, result)
+            extract_save_tables(doc_id, result, metadata)
         )
         chunks_saved = results[0]
 

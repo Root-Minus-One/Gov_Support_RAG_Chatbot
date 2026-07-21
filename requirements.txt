@@ -1,7 +1,7 @@
 streamlit
 
-PyMuPDF
-docling
+docling==2.15.0
+docling-core==2.15.0
 rank-bm25
 
 fastapi
@@ -13,7 +13,6 @@ pydantic
 pydantic-settings
 
 pinecone
-weaviate
 
 asyncpg
 pymongo
@@ -28,6 +27,13 @@ langchain-groq
 # langchain_experimental
 # langsmith
 
+torch
+torchvision
+
+transformers>=4.40.0
+accelerate>=0.27.0
+timm>=0.9.0
+
 sentence-transformers
 
 google-genai
@@ -36,4 +42,3 @@ groq
 python-dotenv
 
 loguru
--e .

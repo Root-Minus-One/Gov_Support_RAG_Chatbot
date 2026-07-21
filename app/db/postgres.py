@@ -1,7 +1,7 @@
 import asyncpg
 import asyncio
 from app.core.config import settings
-
+from loguru import logger
 
 async def main():
     connection = await asyncpg.connect(dsn=settings.DATABASE_URL.get_secret_value())
@@ -17,7 +17,6 @@ async def main():
 
 _pool = None
 
-
 async def init_pool():
     global _pool
     _pool = await asyncpg.create_pool(
@@ -25,6 +24,7 @@ async def init_pool():
         min_size=5,
         max_size=10
     )
+    logger.info("Successfully connected to Postgres pool")
          
     return _pool
 
@@ -34,7 +34,6 @@ async def close_pool():
     if _pool is not None:
         await _pool.close()
     _pool = None
-
 
 
 def get_pool():

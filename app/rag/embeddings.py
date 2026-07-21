@@ -8,6 +8,7 @@ import functools
 
 from app.core.config import settings
 from app.db.postgres import get_pool
+from app.db.mongo import get_db
 
 
 _embedding_model = SentenceTransformer(settings.EMBEDDING_MODEL_NAME)
@@ -36,7 +37,7 @@ async def run_embedding_pipeline():
         pool = get_pool()
         async with pool.acquire() as conn:
 
-            select_query = "SELECT c.chunk_id, c.chunk_text, c.doc_id, d.category " \
+            select_query = "SELECT c.chunk_id, c.chunk_text, c.doc_id, d.category, d.document_title " \
             "FROM chunks c " \
             "JOIN documents d ON c.doc_id = d.doc_id " \
             "WHERE c.is_embedded = FALSE"
@@ -59,7 +60,8 @@ async def run_embedding_pipeline():
                         "chunk_text": row["chunk_text"],
                         "doc_id": str(row["doc_id"]),
                         "document_title": row["document_title"],
-                        "category": row["category"]})
+                        "category": row["category"],
+                        "type": "text"})
                     for row, emb in zip(batch_rows, batch_embeddings)
                 ]
                 index.upsert(vectors=vectors)
@@ -71,5 +73,44 @@ async def run_embedding_pipeline():
             logger.info(f"Embedding pipeline complete - {len(results)} chunks embedded")
                 
     except Exception as e:
-        logger.error(f"Failed ro embed: {e}")
+        logger.error(f"Failed to embed text: {e}")
+        raise
+
+
+    try: 
+        db = get_db()
+        tables = await db["tables"].find({"is_embedded": False}).to_list(None)
+
+        table_texts = [t["table_markdown"] for t in tables]
+        table_embeddings = await embed_texts(table_texts)
+
+
+        for i in range(0, len(tables), BATCH_SIZE):
+
+            batch_tables = tables[i:i+BATCH_SIZE]
+            batch_table_embeddings = table_embeddings[i:i+BATCH_SIZE]
+
+
+            vectors = [
+                        (str(table["_id"]), emb, {
+                            "chunk_text": table["table_markdown"],
+                            "doc_id": str(table["doc_id"]),
+                            "page_number": table["page_number"],
+                            "category": table["category"],
+                            "file_name": table["file_name"],
+                            "type": "table"                
+                            }) 
+                            for table, emb in zip(batch_tables, batch_table_embeddings)
+                            ]
+                
+            index.upsert(vectors=vectors)
+
+            table_ids = [table["_id"] for table in batch_tables]
+            await db["tables"].update_many(
+                {"_id": {"$in": table_ids}},
+                {"$set": {"is_embedded": True}}
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to embed table: {e}")
         raise

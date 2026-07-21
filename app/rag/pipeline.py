@@ -21,8 +21,6 @@ class PineconeRetriever(BaseRetriever):
         ...
     
      
-
-)
 # 3. BM25 retriever
 # 4. Ensemble retriever
 # 5. Prompt template
