@@ -37,7 +37,7 @@ async def run_embedding_pipeline():
         pool = get_pool()
         async with pool.acquire() as conn:
 
-            select_query = "SELECT c.chunk_id, c.chunk_text, c.doc_id, d.category, d.document_title " \
+            select_query = "SELECT c.chunk_id, c.page_number, c.chunk_text, c.doc_id, d.category, d.document_title " \
             "FROM chunks c " \
             "JOIN documents d ON c.doc_id = d.doc_id " \
             "WHERE c.is_embedded = FALSE"

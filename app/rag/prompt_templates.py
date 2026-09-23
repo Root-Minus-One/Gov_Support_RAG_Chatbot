@@ -1,4 +1,4 @@
-def get_prompt_template(question: str, chunks: list[dict]) -> str:
+def get_prompt_template(question: str, chunks: list[dict], history) -> str:
     context = "\n\n".join([chunk["chunk_text"] for chunk in chunks])
     
     return f"""You are a helpful assistant for AP government MSME schemes.
@@ -8,6 +8,9 @@ Keep your answer concise and accurate.
 
 Context:
 {context}
+
+Conversation History:
+{history}
 
 Question:
 {question}

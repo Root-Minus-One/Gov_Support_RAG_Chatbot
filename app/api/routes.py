@@ -14,6 +14,7 @@ from app.rag.embeddings import run_embedding_pipeline
 from app.rag.generation import generate_answer
 from app.rag.retrieval import retrieve_chunks
 from app.rag.gaurdrails import validate_input, check_relevance
+from app.rag.memory import get_or_create_session, get_history, save_message
 
 from app.middleware.rate_limiter import limiter
 
@@ -57,6 +58,7 @@ async def run_embeddings(background_tasks: BackgroundTasks):
 class ChatRequest(BaseModel):
     question : str
     category : str | None = None
+    session_id : str | None
 
 @router.post("/chat")
 @limiter.limit("5/minute")
@@ -66,17 +68,38 @@ async def chat(request: Request, body: ChatRequest):
     if not is_valid:
         return {"error": message}
 
+    # memory
+    session_id = await get_or_create_session(body.session_id)
+    history = await get_history(session_id)
+
     chunks = await retrieve_chunks(question=body.question, category=body.category)
 
     is_relevant, message = check_relevance(chunks)
     if not is_relevant:
         return {"answer": "I don't have information on this topic.", "detail": message}
 
-    answer = generate_answer(body.question, chunks)
-    
-    sources = [{"doc_id": c["doc_id"], "category": c["category"], "score": c["score"]} for c in chunks]
+    answer = generate_answer(body.question, chunks, history)
 
-    return {"question": body.question, "answer": answer, "source": sources}
+    # save messages
+    await save_message(session_id, "user", body.question)
+    await save_message(session_id, "assistant", answer)
+    
+    citations = [
+        {
+            "doc_id": c["doc_id"],
+            "category": c["category"],
+            "page_number": c["page_number"],
+            "score": c["score"]
+            } 
+            for c in chunks
+        ]
+
+    return {
+        "session_id": session_id,
+        "question": body.question,
+        "answer": answer,
+        "citations": citations
+        }
 
 
 

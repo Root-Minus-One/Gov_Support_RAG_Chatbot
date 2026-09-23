@@ -8,9 +8,9 @@ from app.rag.prompt_templates import get_prompt_template
 
 client = Groq(api_key=settings.GROQ_API_KEY.get_secret_value())
 
-def generate_answer(question: str, chunks: list[dict]) -> str:
+def generate_answer(question: str, chunks: list[dict], session_id: list[dict] = []) -> str:
 
-    prompt = get_prompt_template(question, chunks)
+    prompt = get_prompt_template(question, chunks, session_id)
 
     interaction = client.chat.completions.create(
     model=settings.LLM_MODEL_NAME,

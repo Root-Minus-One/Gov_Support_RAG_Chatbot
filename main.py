@@ -6,13 +6,15 @@ from loguru import logger
 
 from app.api.routes import router
 from app.core.logger import setup_logging
+from app.core.config import settings
 from app.db.postgres import init_pool, close_pool
 from app.db.mongo import init_mongo, close_mongo
 from app.middleware.cors import setup_cors
 from app.middleware.logging_middleware import setup_logging_middleware
 from app.middleware.exception_handler import global_exception_handler   
 from app.middleware.rate_limiter import setup_rate_limiter
-from app.core.config import settings
+from app.rag.hybrid_search import build_bm25_index
+
 
 
 
@@ -21,11 +23,15 @@ async def lifespan(app: FastAPI):
     
     setup_logging()
 
-
     try:
         await init_pool()
     except Exception as e:
         logger.error(f"Postgres connection failed {e}")
+        raise
+    try:
+        await build_bm25_index()
+    except Exception as e:
+        logger.error(f"BM25 index build failed: {e}")
         raise
     try:
         await init_mongo()

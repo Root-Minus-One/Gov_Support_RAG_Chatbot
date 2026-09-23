@@ -1,11 +1,12 @@
 from docling_core.transforms.chunker.hybrid_chunker import HybridChunker
 from docling.datamodel.pipeline_options import PdfPipelineOptions
+from docling.datamodel.accelerator_options import AcceleratorOptions
 from docling.backend.pypdfium2_backend import PyPdfiumDocumentBackend
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.base_models import InputFormat
 from docling_core.types.doc.document import PictureItem
 from docling_core.types.doc.base import ImageRefMode
-
+import multiprocessing
 
 from io import BytesIO
 from PIL import Image
@@ -54,10 +55,16 @@ async def save_document(metadata, total_pages):
 
 
 def get_docling_converter():
-    pipeline_options = PdfPipelineOptions()
+    pipeline_options = PdfPipelineOptions()   
     pipeline_options.do_table_structure = False
     pipeline_options.generate_picture_images = False
     pipeline_options.do_ocr = False
+
+    pipeline_options.accelerator_options = AcceleratorOptions(
+        num_threads=multiprocessing.cpu_count(),
+        device='cuda'
+    )
+
     return DocumentConverter(
             format_options={
                 InputFormat.PDF: PdfFormatOption(
