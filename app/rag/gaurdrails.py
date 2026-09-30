@@ -23,7 +23,7 @@ def check_relevance(chunks: list[dict]) -> tuple[bool, str]:
     if not chunks:
         return False, "No context chunks retrieved from the vector database."
     
-    RELEVANCE_SCORE_THRESHOLD = 0.6
+    RELEVANCE_SCORE_THRESHOLD = 0.01
     valid_chunks = [c for c in chunks if c.get("score", 0) >= RELEVANCE_SCORE_THRESHOLD]
     
     if not valid_chunks:

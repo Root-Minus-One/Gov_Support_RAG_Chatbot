@@ -1,11 +1,12 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import SecretStr
 from typing import Literal
+from dotenv import load_dotenv
 
-
+load_dotenv()
 
 class Settings(BaseSettings):
-    ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+    ALLOWED_ORIGINS: list[str] = ["http://localhost:5173", "http://localhost:8000"]
     APP_NAME: str = "gov-support-rag-chatbot"
     APP_VERSION: str = "0.0.1"
     DATABASE_URL: SecretStr

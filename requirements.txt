@@ -21,11 +21,14 @@ langchain
 langchain-core
 langchain-community
 langchain-groq
+langfuse
 #langchain-pinecone
 
 # langchain-huggingface
 # langchain_experimental
 # langsmith
+
+loguru
 
 torch
 torchvision
@@ -41,4 +44,4 @@ groq
 
 python-dotenv
 
-loguru
+ragas

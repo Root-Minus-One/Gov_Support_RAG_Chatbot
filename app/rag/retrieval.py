@@ -1,6 +1,6 @@
 from pinecone import Pinecone
 from loguru import logger
-
+import asyncio
 
 from app.core.config import settings
 from app.rag.embeddings import embed_texts
@@ -8,7 +8,11 @@ from app.rag.embeddings import index
 from app.rag.hybrid_search import bm25_search
 from app.rag.reranker import rerank
 
-async def retrieve_chunks(question: str, top_k: int = 3, category: str | None = None) -> list[dict]:
+from langfuse import observe
+
+
+@observe
+async def retrieve_chunks(question: str, top_k: int = 15, category: str | None = None) -> list[dict]:
 
     embed_question = await embed_texts([question])
     embedding = embed_question[0]
@@ -31,12 +35,12 @@ async def retrieve_chunks(question: str, top_k: int = 3, category: str | None = 
             "chunk_text": match["metadata"].get("chunk_text", ""),
             "doc_id": match["metadata"].get("doc_id", ""),
             "document_title": match["metadata"].get("document_title", ""),
-            "page_number": match["metadata"].get("page_number", ""),
+            "page_number": match["metadata"].get("page_number", None),
             "score": match["score"],
             "category": match["metadata"].get("category", "unknown")
         })
 
-    bm25_results = bm25_search(question,top_k)
+    bm25_results = asyncio.to_thread(bm25_search, question, top_k)
 
     fused_rank = reciprocal_rank_fusion(vector_results, bm25_results)
 

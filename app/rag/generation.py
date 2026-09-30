@@ -5,9 +5,11 @@ from groq import Groq
 from app.core.config import settings
 from app.rag.prompt_templates import get_prompt_template
 
+from langfuse import observe
 
 client = Groq(api_key=settings.GROQ_API_KEY.get_secret_value())
 
+@observe
 def generate_answer(question: str, chunks: list[dict], session_id: list[dict] = []) -> str:
 
     prompt = get_prompt_template(question, chunks, session_id)

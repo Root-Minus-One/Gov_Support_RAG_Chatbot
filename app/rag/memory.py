@@ -1,18 +1,32 @@
 from app.db.postgres import get_pool
 
-async def get_or_create_session(session_id: str | None) -> str:
-    # if session_id is None, create new conversation row, return new session_id
+import uuid
+
+async def get_or_create_session(session_id: str | None = None) -> str:
     pool = get_pool()
     
-    if session_id is None:
-        async with pool.acquire() as conn:
-            new_id = await conn.fetch("INSERT INTO conversations DEFAULT VALUES RETURNING session_id")
-        return str(new_id)
-    else:
-        async with pool.acquire() as conn:
-            await conn.execute("UPDATE conversations SET last_active = NOW() WHERE session_id = $1",
-                session_id)
-        return session_id
+    async with pool.acquire() as conn:
+        # 1. If a valid UUID string was passed, try to update existing session
+        if session_id:
+            try:
+                valid_uuid = uuid.UUID(session_id)
+                status = await conn.execute(
+                    "UPDATE conversations SET last_active = NOW() WHERE session_id = $1",
+                    valid_uuid
+                )
+                # Check if a row was actually updated
+                if status != "UPDATE 0":
+                    return str(valid_uuid)
+            except (ValueError, TypeError):
+                pass  # Fallback to creating a new row if invalid UUID passed
+
+        # 2. If no valid session exists, insert without providing session_id so PostgreSQL uses gen_random_uuid()
+        new_session_id = await conn.fetchval("""
+            INSERT INTO conversations DEFAULT VALUES 
+            RETURNING session_id;
+        """)
+
+        return str(new_session_id)
 
 
     # if session_id exists, update last_active, return it

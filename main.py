@@ -17,7 +17,6 @@ from app.rag.hybrid_search import build_bm25_index
 
 
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     

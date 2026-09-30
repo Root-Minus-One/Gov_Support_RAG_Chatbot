@@ -1,0 +1,41 @@
+name: Build and Deploy RAG Application
+
+on:
+  push:
+    branches:
+      - main # Triggers when you push to the main branch
+    paths-ignore:
+      - 'frontend/**
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout your code
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      # 2. Log in to Azure Container Registry using the secrets you just added
+      - name: Log in to ACR
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      # 3. Build and Push your RAG Docker Image
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/rag-backend-app:${{ github.sha }} .
+          docker push ${{ secrets.ACR_LOGIN_SERVER }}/rag-backend-app:${{ github.sha }}
+
+      # 4. Deploy the updated image directly to Azure Container Apps
+      - name: Deploy to Azure Container Apps
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          acrUsername: ${{ secrets.ACR_USERNAME }}
+          acrPassword: ${{ secrets.ACR_PASSWORD }}
+          acrName: ${{ secrets.ACR_USERNAME }}
+          resourceGroup: experiment
+          containerAppName: govragprod
+          imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/rag-backend-app:${{ github.sha }}

@@ -5,3 +5,4 @@ __pycache__
 .git
 logs/
 node_modules
+frontend/
