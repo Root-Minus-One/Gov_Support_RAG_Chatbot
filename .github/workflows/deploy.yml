@@ -28,3 +28,16 @@ jobs:
         run: |
           docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/rag-backend-app:latest .
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/rag-backend-app:latest
+
+      # 4. Force Azure to drop the 0-scale cache and deploy the image
+      - name: Force Azure Revision Update
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          acrUsername: ${{ secrets.ACR_USERNAME }}
+          acrPassword: ${{ secrets.ACR_PASSWORD }}
+          acrName: ${{ secrets.ACR_USERNAME }}
+          resourceGroup: experiment
+          containerAppName: rag-backend-app
+          containerName: rag-backend-app
+          imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/rag-backend-app:latest
+          disableWorkflowAuth: true
