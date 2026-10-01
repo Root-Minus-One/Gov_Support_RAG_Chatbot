@@ -138,7 +138,6 @@ python-dotenv==1.2.3
 python-multipart==0.0.32
 python-oxmsg==0.0.2
 python-pptx==1.0.2
-pywin32==312
 pyyaml==6.0.3
 ragas==0.4.3
 rank-bm25==0.2.2
