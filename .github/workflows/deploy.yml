@@ -28,8 +28,15 @@ jobs:
         run: |
           docker build -t ${{ secrets.ACR_LOGIN_SERVER }}/rag-backend-app:${{ github.sha }} .
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/rag-backend-app:${{ github.sha }}
+          
+      # 4. Log in to the Azure CLI using your Registry credentials
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          creds: '{"clientId":"${{ secrets.ACR_USERNAME }}","clientSecret":"${{ secrets.ACR_PASSWORD }}","tenantId":"","subscriptionId":""}'
+          allow-no-subscriptions: true
 
-      # 4. Deploy the updated image directly to Azure Container Apps
+      # 5. Deploy the updated image directly to Azure Container Apps
       - name: Deploy to Azure Container Apps
         uses: azure/container-apps-deploy-action@v1
         with:
