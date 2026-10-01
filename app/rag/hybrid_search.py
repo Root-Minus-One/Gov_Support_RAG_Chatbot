@@ -20,6 +20,15 @@ async def build_bm25_index() -> None:
             retrieve_query = "SELECT chunk_id, chunk_text, doc_id, page_number FROM chunks;"
 
             rows = await conn.fetch(retrieve_query)
+
+            # Guard against an empty cloud database corpus
+            if not rows:
+                logger.warning("Database 'chunks' table is empty. Skipping BM25 indexing until data is processed.")
+                _bm25_index = None
+                _corpus_chunk_ids = []
+                _corpus_texts = []
+                _corpus_metadata = []
+                return
             _corpus_chunk_ids = [row["chunk_id"] for row in rows]
             _corpus_texts = [row["chunk_text"] for row in rows]
 
