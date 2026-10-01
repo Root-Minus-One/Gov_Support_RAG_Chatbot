@@ -5,7 +5,7 @@ on:
     branches:
       - main # Triggers when you push to the main branch
     paths-ignore:
-      - 'frontend/**
+      - 'frontend/**'
 
 jobs:
   build-and-deploy:
@@ -37,5 +37,5 @@ jobs:
           acrPassword: ${{ secrets.ACR_PASSWORD }}
           acrName: ${{ secrets.ACR_USERNAME }}
           resourceGroup: experiment
-          containerAppName: govragprod
+          containerAppName: rag-backend-app
           imageToDeploy: ${{ secrets.ACR_LOGIN_SERVER }}/rag-backend-app:${{ github.sha }}

@@ -1,4 +1,3 @@
-# Gov_Support_RAG_Chatbot
 This project can be used to easily know the government schemes and polices
 
 AI-Powered Chatbot for MSME ONE Portal
@@ -40,117 +39,117 @@ An AI-powered chatbot for the AP MSME ONE Portal that helps entrepreneurs access
 
 ```
                         ┌─────────────────────────────────────────────────────┐
-                        │                   DATA INGESTION                     │
-                        │                                                       │
-                        │  PDF Files                                            │
-                        │  (Guidelines / Policies / RAMP)                      │
-                        │       │                                               │
-                        │       ▼                                               │
+                        │                   DATA INGESTION                    │
+                        │                                                     │
+                        │  PDF Files                                          │
+                        │  (Guidelines / Policies / RAMP)                     │
+                        │       │                                             │
+                        │       ▼                                             │
                         │  ┌─────────────┐    ┌──────────────┐                │
-                        │  │   Docling    │───▶│  Metadata    │                │
-                        │  │   Parser     │    │  Extractor   │                │
+                        │  │   Docling   │───▶│  Metadata    │               │
+                        │  │   Parser    │    │  Extractor   │                │
                         │  └─────────────┘    └──────┬───────┘                │
-                        │       │                     │                        │
-                        │       ▼                     ▼                        │
+                        │       │                    │                        │
+                        │       ▼                    ▼                        │
                         │  ┌─────────┐  ┌──────────────────┐                  │
-                        │  │  Text   │  │  PostgreSQL       │                  │
-                        │  │ Chunks  │─▶│  documents table  │                  │
-                        │  └────┬────┘  │  chunks table     │                  │
-                        │       │       └──────────────────┘                   │
-                        │  ┌────┴────┐                                         │
-                        │  │ Tables  │─▶ MongoDB (tables collection)           │
-                        │  └─────────┘                                         │
-                        │  ┌─────────┐                                         │
-                        │  │ Images  │─▶ MongoDB (images collection)           │
-                        │  └─────────┘                                         │
+                        │  │  Text   │  │  PostgreSQL      │                  │
+                        │  │ Chunks  │─▶│  documents table │                 │
+                        │  └────┬────┘  │  chunks table    │                  │
+                        │       │       └──────────────────┘                  │
+                        │  ┌────┴────┐                                        │
+                        │  │ Tables  │─▶ MongoDB (tables collection)         │
+                        │  └─────────┘                                        │
+                        │  ┌─────────┐                                        │
+                        │  │ Images  │─▶ MongoDB (images collection)         │
+                        │  └─────────┘                                        │
                         └─────────────────────────────────────────────────────┘
                                               │
                                               ▼
                         ┌─────────────────────────────────────────────────────┐
-                        │                  EMBEDDING PIPELINE                  │
-                        │                                                       │
-                        │  PostgreSQL chunks (is_embedded = FALSE)             │
-                        │       │                                               │
-                        │       ▼                                               │
-                        │  BGE-small-en-v1.5 (sentence-transformers)           │
-                        │       │                                               │
-                        │       ▼                                               │
-                        │  Pinecone Vector Index                               │
-                        │  (chunk_text, doc_id, category,                      │
-                        │   document_title, page_number)                       │
-                        │       │                                               │
-                        │  PostgreSQL chunks (is_embedded = TRUE)              │
+                        │                  EMBEDDING PIPELINE                 │
+                        │                                                     │
+                        │  PostgreSQL chunks (is_embedded = FALSE)            │
+                        │       │                                             │
+                        │       ▼                                             │
+                        │  BGE-small-en-v1.5 (sentence-transformers)          │
+                        │       │                                             │
+                        │       ▼                                             │
+                        │  Pinecone Vector Index                              │
+                        │  (chunk_text, doc_id, category,                     │
+                        │   document_title, page_number)                      │
+                        │       │                                             │
+                        │  PostgreSQL chunks (is_embedded = TRUE)             │
                         └─────────────────────────────────────────────────────┘
                                               │
                                               ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              RETRIEVAL PIPELINE                                  │
-│                                                                                  │
-│   User Question                                                                  │
-│        │                                                                         │
+│                              RETRIEVAL PIPELINE                                 │
+│                                                                                 │
+│   User Question                                                                 │
+│        │                                                                        │
 │        ├──────────────────────────┬──────────────────────────┐                  │
-│        │                          │                          │                   │
-│        ▼                          ▼                          ▼                   │
+│        │                          │                          │                  │
+│        ▼                          ▼                          ▼                  │
 │   BGE Embedding            BM25 Index                  Guardrails               │
 │   (Dense Search)          (Sparse Search)           (Input Validation)          │
-│        │                          │                                              │
-│        ▼                          ▼                                              │
-│   Pinecone Query          Keyword Matches                                        │
-│   (Top K results)         (Top K results)                                        │
-│        │                          │                                              │
+│        │                          │                                             │
+│        ▼                          ▼                                             │
+│   Pinecone Query          Keyword Matches                                       │
+│   (Top K results)         (Top K results)                                       │
+│        │                          │                                             │
 │        └──────────────┬───────────┘                                             │
-│                        │                                                         │
-│                        ▼                                                         │
-│              Reciprocal Rank Fusion                                              │
-│              (RRF — combines both)                                               │
-│                        │                                                         │
-│                        ▼                                                         │
-│              CrossEncoder Reranker                                               │
+│                        │                                                        │
+│                        ▼                                                        │
+│              Reciprocal Rank Fusion                                             │
+│              (RRF — combines both)                                              │
+│                        │                                                        │
+│                        ▼                                                        │
+│              CrossEncoder Reranker                                              │
 │         (ms-marco-MiniLM-L-6-v2)                                                │
-│                        │                                                         │
-│                        ▼                                                         │
-│              Top K Final Chunks                                                  │
+│                        │                                                        │
+│                        ▼                                                        │
+│              Top K Final Chunks                                                 │
 └─────────────────────────────────────────────────────────────────────────────────┘
                                               │
                                               ▼
                         ┌─────────────────────────────────────────────────────┐
-                        │                  GENERATION PIPELINE                 │
-                        │                                                       │
-                        │  Conversation History (PostgreSQL)                   │
-                        │       │                                               │
-                        │       ▼                                               │
-                        │  Prompt Template                                      │
-                        │  ┌─────────────────────────────────┐                 │
-                        │  │ System: AP MSME assistant        │                 │
-                        │  │ Context: {retrieved chunks}      │                 │
-                        │  │ History: {last 10 messages}      │                 │
-                        │  │ Question: {user question}        │                 │
-                        │  └─────────────────────────────────┘                 │
-                        │       │                                               │
-                        │       ▼                                               │
-                        │  Groq API (Llama 3.1)                                │
-                        │       │                                               │
-                        │       ▼                                               │
-                        │  Answer + Citations                                   │
-                        │  (document_title, page_number, category)             │
+                        │                  GENERATION PIPELINE                │
+                        │                                                     │
+                        │  Conversation History (PostgreSQL)                  │
+                        │       │                                             │
+                        │       ▼                                             │
+                        │  Prompt Template                                    │
+                        │  ┌─────────────────────────────────┐                │
+                        │  │ System: AP MSME assistant       │                │
+                        │  │ Context: {retrieved chunks}     │                │
+                        │  │ History: {last 10 messages}     │                │
+                        │  │ Question: {user question}       │                │
+                        │  └─────────────────────────────────┘                │
+                        │       │                                             │
+                        │       ▼                                             │
+                        │  Groq API (Llama 3.1)                               │
+                        │       │                                             │
+                        │       ▼                                             │
+                        │  Answer + Citations                                 │
+                        │  (document_title, page_number, category)            │
                         └─────────────────────────────────────────────────────┘
                                               │
                                               ▼
                         ┌─────────────────────────────────────────────────────┐
-                        │                    API LAYER                          │
-                        │                                                       │
-                        │  FastAPI                                              │
-                        │  ├── POST /chat      → RAG chat endpoint             │
-                        │  ├── POST /ingest    → trigger ingestion             │
-                        │  ├── POST /embed     → trigger embedding             │
-                        │  ├── GET  /ingest/status → ingestion logs            │
-                        │  └── GET  /health    → health check                  │
-                        │                                                       │
-                        │  Middleware Stack                                     │
-                        │  ├── CORS                                            │
-                        │  ├── Rate Limiting (SlowAPI)                         │
-                        │  ├── Request Logging (Loguru)                        │
-                        │  └── Global Exception Handler                        │
+                        │                    API LAYER                        │
+                        │                                                     │
+                        │  FastAPI                                            │
+                        │  ├── POST /chat      → RAG chat endpoint            │
+                        │  ├── POST /ingest    → trigger ingestion            │
+                        │  ├── POST /embed     → trigger embedding            │
+                        │  ├── GET  /ingest/status → ingestion logs           │
+                        │  └── GET  /health    → health check                 │
+                        │                                                     │
+                        │  Middleware Stack                                   │
+                        │  ├── CORS                                           │
+                        │  ├── Rate Limiting (SlowAPI)                        │
+                        │  ├── Request Logging (Loguru)                       │
+                        │  └── Global Exception Handler                       │
                         └─────────────────────────────────────────────────────┘
 ```
 
